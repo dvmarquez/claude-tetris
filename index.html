@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tetris</title>
   <link rel="stylesheet" href="style.css" />
+  <script>
+    try { if (localStorage.getItem('tetris-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
+  </script>
 </head>
 <body>
   <div class="wrapper">
@@ -29,6 +32,11 @@
         <div class="panel-section">
           <span class="label">NEXT</span>
           <canvas id="next-canvas" width="120" height="120"></canvas>
+        </div>
+
+        <div class="panel-section">
+          <span class="label">TEMA</span>
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Cambiar a tema claro" title="Cambiar a tema claro">🌙</button>
         </div>
 
         <div class="panel-section controls">
