@@ -46,7 +46,7 @@
             <li><kbd>↑</kbd> rotar</li>
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
-            <li><kbd>P</kbd> pausa</li>
+            <li><kbd>P</kbd><kbd>Esc</kbd> pausa</li>
           </ul>
         </div>
       </aside>
@@ -56,9 +56,22 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
-        <button id="restart-btn">Reiniciar</button>
+        <button id="restart-btn" class="btn" type="button">Reiniciar</button>
       </div>
     </div>
+
+    <dialog id="pause-menu" class="pause-menu" aria-labelledby="pause-title">
+      <h2 id="pause-title" class="pause-title">PAUSA</h2>
+      <button id="resume-btn" class="btn" type="button">Reanudar</button>
+      <button id="menu-restart-btn" class="btn" type="button">Reiniciar</button>
+      <button id="controls-btn" class="btn btn-secondary" type="button" aria-expanded="false" aria-controls="menu-controls">Ver controles</button>
+      <div id="menu-controls" class="controls" hidden></div>
+      <label class="start-level">
+        <span class="label">NIVEL INICIAL</span>
+        <select id="start-level"></select>
+        <small>Se aplica en la próxima partida</small>
+      </label>
+    </dialog>
   </div>
 
   <script src="game.js"></script>

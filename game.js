@@ -31,6 +31,9 @@ const PIECES = [
 ];
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
+const MAX_START_LEVEL = 10;
+// Teclas que el navegador usa para hacer scroll
+const SCROLL_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'];
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -40,12 +43,19 @@ const scoreEl = document.getElementById('score');
 const linesEl = document.getElementById('lines');
 const levelEl = document.getElementById('level');
 const overlay = document.getElementById('overlay');
-const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const pauseMenu = document.getElementById('pause-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const menuRestartBtn = document.getElementById('menu-restart-btn');
+const controlsBtn = document.getElementById('controls-btn');
+const menuControls = document.getElementById('menu-controls');
+const startLevelSelect = document.getElementById('start-level');
 
 const THEME_KEY = 'tetris-theme';
+const START_LEVEL_KEY = 'tetris-start-level';
+let startLevel = 1;
 let gridColor = '#22222e';
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
@@ -114,8 +124,7 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    setLevel(startLevel + Math.floor(lines / 10));
     updateHUD();
   }
 }
@@ -156,6 +165,11 @@ function spawn() {
     endGame();
   }
   drawNext();
+}
+
+function setLevel(lvl) {
+  level = lvl;
+  dropInterval = Math.max(100, 1000 - (level - 1) * 90);
 }
 
 function updateHUD() {
@@ -229,24 +243,31 @@ function drawNext() {
 function endGame() {
   gameOver = true;
   cancelAnimationFrame(animId);
-  overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
 }
 
-function togglePause() {
-  if (gameOver) return;
-  paused = !paused;
-  if (!paused) {
-    lastTime = performance.now();
-    loop(lastTime);
-  } else {
-    cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
-  }
+function openPauseMenu() {
+  if (gameOver || paused) return;
+  paused = true;
+  cancelAnimationFrame(animId);
+  pauseMenu.returnValue = '';
+  pauseMenu.showModal();
 }
+
+// Todo cierre del menú (Reanudar, Reiniciar, P, Escape nativo) pasa por aquí
+pauseMenu.addEventListener('close', () => {
+  // Evita que Space active un botón del menú durante la partida
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  if (pauseMenu.returnValue === 'restart') {
+    init();
+    return;
+  }
+  paused = false;
+  lastTime = performance.now();
+  dropAccum = 0;
+  animId = requestAnimationFrame(loop);
+});
 
 function loop(ts) {
   const dt = ts - lastTime;
@@ -269,10 +290,9 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  setLevel(startLevel);
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
@@ -284,8 +304,23 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (pauseMenu.open) {
+    // Escape lo maneja el <dialog> nativo (cancel → close)
+    if (e.code === 'KeyP') { e.preventDefault(); pauseMenu.close(); return; }
+    // Navegación nativa: flechas en el selector y Space en botones; el resto no hace scroll
+    const native = e.target instanceof HTMLSelectElement ||
+      (e.code === 'Space' && e.target instanceof HTMLButtonElement);
+    if (SCROLL_KEYS.includes(e.code) && !native) e.preventDefault();
+    return;
+  }
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    // preventDefault: que este mismo Escape no cierre el menú recién abierto
+    e.preventDefault();
+    openPauseMenu();
+    return;
+  }
   if (paused || gameOver) return;
+  if (SCROLL_KEYS.includes(e.code)) e.preventDefault();
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -301,7 +336,6 @@ document.addEventListener('keydown', e => {
       tryRotate();
       break;
     case 'Space':
-      e.preventDefault();
       hardDrop();
       break;
   }
@@ -309,6 +343,27 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+resumeBtn.addEventListener('click', () => pauseMenu.close());
+menuRestartBtn.addEventListener('click', () => pauseMenu.close('restart'));
+
+menuControls.append(document.querySelector('.panel .controls ul').cloneNode(true));
+controlsBtn.addEventListener('click', () => {
+  const show = menuControls.hidden;
+  menuControls.hidden = !show;
+  controlsBtn.setAttribute('aria-expanded', String(show));
+  controlsBtn.textContent = show ? 'Ocultar controles' : 'Ver controles';
+});
+
+try {
+  const saved = parseInt(localStorage.getItem(START_LEVEL_KEY), 10);
+  if (saved >= 1 && saved <= MAX_START_LEVEL) startLevel = saved;
+} catch (e) {}
+for (let n = 1; n <= MAX_START_LEVEL; n++) startLevelSelect.add(new Option(n, n));
+startLevelSelect.value = startLevel;
+startLevelSelect.addEventListener('change', () => {
+  startLevel = Number(startLevelSelect.value);
+  try { localStorage.setItem(START_LEVEL_KEY, String(startLevel)); } catch (e) {}
+});
 
 function applyTheme(theme) {
   const light = theme === 'light';
