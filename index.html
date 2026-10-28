@@ -39,6 +39,16 @@
           <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Cambiar a tema claro" title="Cambiar a tema claro">🌙</button>
         </div>
 
+        <div class="panel-section">
+          <label class="label" for="skin-select">SKIN</label>
+          <select id="skin-select" class="skin-select">
+            <option value="retro">Retro</option>
+            <option value="neon">Neón</option>
+            <option value="pastel">Pastel</option>
+            <option value="pixel">Pixel art</option>
+          </select>
+        </div>
+
         <div class="panel-section controls">
           <span class="label">CONTROLS</span>
           <ul>
@@ -46,7 +56,7 @@
             <li><kbd>↑</kbd> rotar</li>
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
-            <li><kbd>P</kbd> pausa</li>
+            <li><kbd>P</kbd><kbd>Esc</kbd> pausa</li>
           </ul>
         </div>
       </aside>
@@ -56,9 +66,35 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
-        <button id="restart-btn">Reiniciar</button>
+        <form id="name-form" class="name-form hidden">
+          <label for="player-name">¡Nuevo récord! Tu nombre:</label>
+          <div class="name-row">
+            <input id="player-name" type="text" maxlength="12" autocomplete="off" spellcheck="false" />
+            <button type="submit">Guardar</button>
+          </div>
+        </form>
+        <section id="records" class="records hidden" aria-label="Tabla de récords">
+          <span class="label">RÉCORDS</span>
+          <ol id="records-list"></ol>
+          <p id="records-stats" class="records-stats"></p>
+          <button id="reset-records" class="reset-records" type="button">Borrar récords</button>
+        </section>
+        <button id="restart-btn" class="btn" type="button">Reiniciar</button>
       </div>
     </div>
+
+    <dialog id="pause-menu" class="pause-menu" aria-labelledby="pause-title">
+      <h2 id="pause-title" class="pause-title">PAUSA</h2>
+      <button id="resume-btn" class="btn" type="button">Reanudar</button>
+      <button id="menu-restart-btn" class="btn" type="button">Reiniciar</button>
+      <button id="controls-btn" class="btn btn-secondary" type="button" aria-expanded="false" aria-controls="menu-controls">Ver controles</button>
+      <div id="menu-controls" class="controls" hidden></div>
+      <label class="start-level">
+        <span class="label">NIVEL INICIAL</span>
+        <select id="start-level"></select>
+        <small>Se aplica en la próxima partida</small>
+      </label>
+    </dialog>
   </div>
 
   <script src="game.js"></script>
