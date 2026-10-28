@@ -44,9 +44,19 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const pauseMenu = document.getElementById('pause-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const pauseRestartBtn = document.getElementById('pause-restart-btn');
+const controlsBtn = document.getElementById('controls-btn');
+const pauseControls = document.getElementById('pause-controls');
+const startLevelSelect = document.getElementById('start-level');
 
 const THEME_KEY = 'tetris-theme';
 let gridColor = '#22222e';
+
+const START_LEVEL_KEY = 'tetris-start-level';
+const MAX_START_LEVEL = 10;
+let startLevel = 1;
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
@@ -114,10 +124,14 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = startLevel + Math.floor(lines / 10);
+    dropInterval = dropIntervalFor(level);
     updateHUD();
   }
+}
+
+function dropIntervalFor(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
 }
 
 function ghostY() {
@@ -238,14 +252,27 @@ function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    closePauseMenu();
     lastTime = performance.now();
-    loop(lastTime);
+    dropAccum = 0;
+    animId = requestAnimationFrame(loop);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    openPauseMenu();
   }
+}
+
+function openPauseMenu() {
+  startLevelSelect.value = String(startLevel);
+  pauseControls.classList.add('hidden');
+  controlsBtn.setAttribute('aria-expanded', 'false');
+  pauseMenu.classList.remove('hidden');
+  resumeBtn.focus();
+}
+
+function closePauseMenu() {
+  if (pauseMenu.contains(document.activeElement)) document.activeElement.blur();
+  pauseMenu.classList.add('hidden');
 }
 
 function loop(ts) {
@@ -269,23 +296,36 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = startLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = dropIntervalFor(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  closePauseMenu();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (!e.repeat) togglePause();
+    return;
+  }
+  if (paused) {
+    // Menú abierto: bloquear las teclas del juego. Dentro del menú se permite
+    // la navegación nativa (Tab, Enter/Space en botones, flechas en el selector).
+    if (!pauseMenu.contains(e.target) &&
+        ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) {
+      e.preventDefault();
+    }
+    return;
+  }
+  if (gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -309,6 +349,34 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+resumeBtn.addEventListener('click', () => { if (paused) togglePause(); });
+pauseRestartBtn.addEventListener('click', init);
+controlsBtn.addEventListener('click', () => {
+  const show = !pauseControls.classList.toggle('hidden');
+  controlsBtn.setAttribute('aria-expanded', String(show));
+});
+
+function loadStartLevel() {
+  let saved = 1;
+  try { saved = parseInt(localStorage.getItem(START_LEVEL_KEY), 10); } catch (e) {}
+  return Number.isInteger(saved) && saved >= 1 && saved <= MAX_START_LEVEL ? saved : 1;
+}
+
+for (let lvl = 1; lvl <= MAX_START_LEVEL; lvl++) {
+  const opt = document.createElement('option');
+  opt.value = String(lvl);
+  opt.textContent = String(lvl);
+  startLevelSelect.appendChild(opt);
+}
+startLevel = loadStartLevel();
+startLevelSelect.value = String(startLevel);
+startLevelSelect.addEventListener('change', () => {
+  const lvl = parseInt(startLevelSelect.value, 10);
+  if (!Number.isInteger(lvl) || lvl < 1 || lvl > MAX_START_LEVEL) return;
+  startLevel = lvl;
+  try { localStorage.setItem(START_LEVEL_KEY, String(lvl)); } catch (e) {}
+});
 
 function applyTheme(theme) {
   const light = theme === 'light';
