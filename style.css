@@ -200,8 +200,8 @@ kbd {
   color: var(--accent);
 }
 
-#restart-btn {
-  margin-top: 8px;
+/* ---- Botones ---- */
+.btn {
   background: var(--accent);
   color: var(--accent-contrast);
   border: none;
@@ -214,6 +214,83 @@ kbd {
   transition: background 0.15s;
 }
 
-#restart-btn:hover {
+.btn:hover {
   background: var(--accent-hover);
+}
+
+.btn:focus-visible,
+.pause-menu select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--kbd-bg);
+}
+
+#restart-btn {
+  margin-top: 8px;
+}
+
+/* ---- Menú de pausa ---- */
+.pause-menu {
+  margin: auto;
+  min-width: 240px;
+  padding: 24px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 0 40px var(--shadow);
+}
+
+.pause-menu[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pause-menu::backdrop {
+  background: var(--overlay-bg);
+  backdrop-filter: blur(4px);
+}
+
+.pause-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.pause-menu .controls ul {
+  padding: 4px 0;
+}
+
+.start-level {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.start-level select {
+  background: var(--kbd-bg);
+  color: var(--text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+.start-level small {
+  font-size: 11px;
+  color: var(--muted);
 }
