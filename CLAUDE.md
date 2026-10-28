@@ -19,7 +19,8 @@ Verification is manual in the browser.
 
 ## Key invariants in `game.js`
 
-- A piece's type index (1–9) is the value stored in its shape matrix, in `board` cells after `merge()`, and the index into `COLORS`. `PIECES` and `COLORS` must stay aligned; `0` means empty.
+- A piece's type index (1–9) is the value stored in its shape matrix, in `board` cells after `merge()`, and the index into `COLORS`. `PIECES` and `COLORS` must stay aligned (and so must every `SKINS[*].colors` palette); `0` means empty.
+- Skins (`SKINS`) own the palette (`colors`), per-cell drawing (`drawCell`) and optional `background`/`grid` overrides. All block drawing goes through `drawBlock()` → `skin.drawCell()`; all canvas clearing through `clearCanvas()`. Preference is stored in `localStorage` under `tetris-skin`.
 - `collide(shape, x, y)` is the single source of truth for bounds/overlap. Cells with `y < 0` are allowed (above the board). Movement, rotation wall kicks (`tryRotate`, offsets `0, -1, 1, -2, 2`), ghost projection (`ghostY`), and gravity all go through it.
 - Locking flow is always `lockPiece()` → `merge()` → `clearLines()` → `spawn()`. `spawn()` promotes `next` to `current`; a collision on spawn triggers `endGame()`.
 - Board dimensions: if `COLS`, `ROWS`, or `BLOCK` change, update the `<canvas id="board">` `width`/`height` in `index.html` to `COLS×BLOCK` × `ROWS×BLOCK`. The next-piece preview assumes a 4×4 grid of 30px cells (120×120 canvas).
