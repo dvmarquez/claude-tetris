@@ -217,3 +217,24 @@ kbd {
 #restart-btn:hover {
   background: var(--accent-hover);
 }
+
+/* ---- Skins ---- */
+.skin-select {
+  align-self: flex-start;
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.skin-select:hover,
+.skin-select:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
